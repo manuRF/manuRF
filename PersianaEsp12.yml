@@ -1,0 +1,122 @@
+esphome:
+  name: esp8266persiana
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: "EUSKALTEL AITANA"
+  password: "Schmetterling"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp8266 Persiana"
+    password: "Gov80ULLsLBo"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: "ESP12S"
+
+ota:
+  password: "ESP12S"
+
+
+remote_receiver:
+  pin:
+    number: D5
+    inverted: true
+  dump:
+    - lg
+  on_lg:
+    then:
+      - lambda: |-
+          unsigned long ulTurnOff;
+          
+          if (0x20DF4EB1 == x.data)
+            id(persiana_dormitorio).open();
+          
+          if (0x20DF8E71 ==x.data)
+            id(persiana_dormitorio).close(); 
+            
+          if(0x20DFC639 ==x.data)
+            id(persiana_dormitorio).stop();
+          
+#binary_sensor: !include ircodes/carmp3.yaml
+
+# Pulsador para abrir y logica.  
+binary_sensor:
+
+- platform: gpio  
+  pin:
+    number: D6    
+    mode: INPUT_PULLUP
+    inverted: true
+  filters:
+    - delayed_on: 50ms
+    - delayed_off: 50ms
+  id: pulsador_abrir
+  on_press:
+    then:
+      # logica, en paro subir y subiendo para....
+      - lambda: |
+          if (id(persiana_dormitorio).current_operation == COVER_OPERATION_IDLE)  
+            {
+          //    id(persiana_dormitorio).open();
+                id(persiana_dormitorio).make_call().set_command_open();
+            } 
+          else 
+            {
+          //    id(persiana_dormitorio).stop();   // Si subiendo o bajando, se para.
+                id(persiana_dormitorio).make_call().set_command_stop();
+            }
+- platform: gpio
+  pin:
+    number: D7  
+    mode: INPUT_PULLUP
+    inverted: true
+  filters:
+    - delayed_on: 50ms
+    - delayed_off: 50ms
+  id: pulsador_cerrar
+  on_press:
+    then:
+      # logica, en paro bajar y bajando para...
+      - lambda: |
+          if (id(persiana_dormitorio).current_operation == COVER_OPERATION_IDLE)  
+            {
+          //    id(persiana_dormitorio).close();
+                id(persiana_dormitorio).make_call().set_command_close();
+            } 
+          else 
+            {
+          //     id(persiana_dormitorio).stop();   // Si subiendo o bajando, se para.
+                 id(persiana_dormitorio).make_call().set_command_stop();
+            }
+            
+switch:
+- platform: gpio
+  pin: D1
+  id: abrir_persiana
+- platform: gpio
+  pin: D2
+  id: cerrar_persiana
+    
+cover:
+- platform: time_based
+  name: "PersianaDormitorio"
+  id: persiana_dormitorio
+  open_action:
+    - switch.turn_on: abrir_persiana
+  open_duration: 24s
+  
+  close_action:
+    - switch.turn_on: cerrar_persiana
+  close_duration: 22s
+  stop_action:
+    - switch.turn_off: abrir_persiana
+    - switch.turn_off: cerrar_persiana
+    
