@@ -4,8 +4,8 @@ esphome:
   board: nodemcuv2
 
 wifi:
-  ssid: "EUSKALTEL AITANA"
-  password: "Schmetterling"
+  ssid: "**********************"
+  password: "**********************"
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
@@ -19,10 +19,10 @@ logger:
 
 # Enable Home Assistant API
 api:
-  password: "ESP12S"
+  password: "**********************"
 
 ota:
-  password: "ESP12S"
+  password: "**********************"
 
 
 remote_receiver:
